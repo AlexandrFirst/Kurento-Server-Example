@@ -29,7 +29,7 @@ namespace CurrentoSignalServer.Services
 
         string ws_uri = "ws://localhost:8888/kurento";
 
-        string file_uri = "file:///tmp/recorder_demo.webm";
+        string file_uri = "file:///tmp/";
 
         private Object _lock = new Object();
 
@@ -162,15 +162,20 @@ namespace CurrentoSignalServer.Services
 
             var sdpAnswer = await webRtcEndPoint.ProcessOfferAsync(sdpOffer);
 
-            RecorderEndpoint recorderEndpoint = await kurentoClient.CreateAsync(new RecorderEndpoint(mediaPipeline, file_uri));
-            await webRtcEndPoint.ConnectAsync(recorderEndpoint);
+            var fileGuid = Guid.NewGuid().ToString();
+
+            string fileName = $"{fileGuid}.mp4";
+            var new_file_uri = file_uri + fileName;
+            RecorderEndpoint recorderEndpoint = await kurentoClient.CreateAsync(new RecorderEndpoint(mediaPipeline, new_file_uri));
+
+            await presenter.WebRtcEndpoiont.ConnectAsync(recorderEndpoint);
 
             recorderEndpoint.Recording += (RecordingEventArgs obj) =>
             {
                 Console.WriteLine(obj.timestamp);
             };
 
-           // await recorderEndpoint.RecordAsync();
+            await recorderEndpoint.RecordAsync();
 
             return new PresenterResponse() { IsSuccess = true, SdpAnswer = sdpAnswer, Endpoint = webRtcEndPoint };
 
